@@ -3,7 +3,7 @@ function encodeNRZL(data) {
     for (let bit of data) {
         signal.push(bit === '1' ? 1 : -1);
     }
-    signal.push(parseInt(data[data.length - 1], 10));
+    signal.push(parseInt(data[data.length ], 10));
     return signal;
 }
 
@@ -44,7 +44,7 @@ function encodePseudoternary(data) {
             signal.push(0);
         }
     }
-    signal.push(data[data.length - 1] === '0' ? polarity : 0);
+    signal.push(data[data.length - 1] === '0' ? -polarity : 0);
     return signal;
 }
 
