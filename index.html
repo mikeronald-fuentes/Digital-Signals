@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Encoding Techniques</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>Digital Signals by Micro</h1>
+    <div class="enter">
+        <label>Enter binary data</label>
+    </div>
+    <div class="input">
+        <input type="text" id="dataEntry" placeholder="Enter binary data">
+    </div>
+    <div class="error">
+        <p id="error-message" style="color: red; display: none;">Please enter a valid binary sequence (only 0s and 1s).</p>
+    </div>
+    <div>
+        <label><input type="radio" name="encoding" value="NRZ-L" checked> NRZ-L</label>
+        <label><input type="radio" name="encoding" value="NRZ-I"> NRZ-I</label>
+        <label><input type="radio" name="encoding" value="Bipolar AMI"> Bipolar AMI</label>
+        <label><input type="radio" name="encoding" value="Pseudoternary"> Pseudoternary</label>
+        <label><input type="radio" name="encoding" value="Manchester"> Manchester</label>
+        <label><input type="radio" name="encoding" value="Differential Manchester"> Differential Manchester</label>
+    </div>
+
+    <div id="chart" class="chart"></div>
+
+</div>
+<script src="scripts.js"></script> 
+</body>
+</html>
