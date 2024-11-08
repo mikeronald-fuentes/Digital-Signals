@@ -1,9 +1,9 @@
 function encodeNRZL(data) {
     let signal = [1];
     for (let bit of data) {
-        signal.push(bit === '1' ? 1 : -1);
+        signal.push(bit === '1' ? 1 : 0);
     }
-    signal.push(parseInt(data[data.length ], 10));
+    signal.push(parseInt(data[data.length], 10));
     return signal;
 }
 
@@ -11,7 +11,7 @@ function encodeNRZI(data) {
     let signal = [1];
     let current = 1;
     for (let bit of data) {
-        if (bit === '1') current *= -1;
+        if (bit === '1') current = 1 - current;
         signal.push(current);
     }
     signal.push(current);
@@ -51,8 +51,8 @@ function encodePseudoternary(data) {
 function encodeManchester(data) {
     let signal = [1];
     for (let bit of data) {
-        signal.push(bit === '0' ? 1 : -1);
-        signal.push(bit === '0' ? -1 : 1);
+        signal.push(bit === '0' ? 1 : 0);
+        signal.push(bit === '0' ? 0 : 1);
     }
     signal.push(parseInt(data[data.length], 10));
     return signal;
@@ -63,17 +63,18 @@ function encodeDiffManchester(data) {
     let current = 1;
     for (let bit of data) {
         if (bit === '0') {
-            signal.push(-current);
             signal.push(current);
+            signal.push(1 - current);
         } else {
+            signal.push(1 - current);
             signal.push(current);
-            signal.push(-current);
-            current *= -1;
+            current = 1 - current;
         }
     }
-    signal.push(current);
+    signal.push(current === 0 ? 1 : 0);
     return signal;
 }
+
 
 function isValidBinary(data) {
     const binaryPattern = /^[01]+$/;
@@ -101,19 +102,36 @@ function plotEncoding() {
     }
     const encoding = document.querySelector('input[name="encoding"]:checked').value;
 
-    let signal;
+    let signal, yScale, valScale;
     let isManchester = false;
+    let hasNigga = false;
+    let yTicks = [];
+
     switch (encoding) {
-        case 'NRZ-L': signal = encodeNRZL(data); break;
-        case 'NRZ-I': signal = encodeNRZI(data); break;
-        case 'Bipolar AMI': signal = encodeBipolarAMI(data); break;
-        case 'Pseudoternary': signal = encodePseudoternary(data); break;
+        case 'NRZ-L': 
+            signal = encodeNRZL(data); 
+            hasNigga = false;
+            break;
+        case 'NRZ-I': 
+            signal = encodeNRZI(data); 
+            hasNigga = false;
+            break;
+        case 'Bipolar AMI': 
+            signal = encodeBipolarAMI(data); 
+            hasNigga = true;
+            break;
+        case 'Pseudoternary': 
+            signal = encodePseudoternary(data); 
+            hasNigga = true;
+            break;
         case 'Manchester': 
-            signal = encodeManchester(data); 
+            signal = encodeManchester(data);
+            hasNigga = false;
             isManchester = true; 
             break;
         case 'Differential Manchester': 
             signal = encodeDiffManchester(data); 
+            hasNigga = false;
             isManchester = true;
             break;
         default: return;
@@ -128,8 +146,17 @@ function plotEncoding() {
         .attr("height", height);
 
     const xScale = d3.scaleLinear().domain([0, signal.length]).range([50, width - 50]);
-    const yScale = d3.scaleLinear().domain([-1.5, 1.5]).range([height - 50, 50]);
-
+    
+    if (hasNigga){
+        yScale = d3.scaleLinear().domain([-1.5, 1.5]).range([height - 50, 50]);
+        yTicks = [1,0,-1];
+        valScale = [-1.5, 1.5];
+    }else{
+        yScale = d3.scaleLinear().domain([-0.2, 1.2]).range([height - 50, 50]);
+        yTicks = [1,0];
+        valScale = [-0.2, 1.2];
+    }
+    
     const lineGenerator = d3.line()
         .x((d, i) => xScale(i))
         .y(d => yScale(d))
@@ -165,7 +192,7 @@ function plotEncoding() {
         .tickFormat((d, i) => (i === 0) ? "" : data[i - 1]);
 
     const yAxis = d3.axisLeft(yScale)
-        .tickValues([1, 0, -1])
+        .tickValues(yTicks)
         .tickFormat(d => d);
 
     svg.append("g")
@@ -189,8 +216,8 @@ function plotEncoding() {
         .append("line")
         .attr("x1", (d, i) => xScale(i + 1))
         .attr("x2", (d, i) => xScale(i + 1))
-        .attr("y1", yScale(-1.5))
-        .attr("y2", yScale(1.5))
+        .attr("y1", yScale(valScale[1]))
+        .attr("y2", yScale(valScale[0]))
         .style("stroke", "#444")
         .style("stroke-dasharray", ("3, 3"))
         .style("opacity", 0)
