@@ -1,5 +1,5 @@
-function encodeNRZL(data) {
-    let signal = [1];
+function encodeNRZL(data, isInitiallyLow) {
+    let signal = isInitiallyLow ? [0] : [1];
     for (let bit of data) {
         signal.push(bit === '1' ? 1 : 0);
     }
@@ -7,9 +7,9 @@ function encodeNRZL(data) {
     return signal;
 }
 
-function encodeNRZI(data) {
-    let signal = [1];
-    let current = 1;
+function encodeNRZI(data, isInitiallyLow) {
+    let signal = isInitiallyLow ? [0] : [1];
+    let current = signal[0];
     for (let bit of data) {
         if (bit === '1') current = 1 - current;
         signal.push(current);
@@ -18,8 +18,8 @@ function encodeNRZI(data) {
     return signal;
 }
 
-function encodeBipolarAMI(data) {
-    let signal = [1];
+function encodeBipolarAMI(data, isInitiallyLow) {
+    let signal = isInitiallyLow ? [-1] : [1];
     let polarity = 1;
     for (let bit of data) {
         if (bit === '1') {
@@ -33,8 +33,8 @@ function encodeBipolarAMI(data) {
     return signal;
 }
 
-function encodePseudoternary(data) {
-    let signal = [1];
+function encodePseudoternary(data, isInitiallyLow) {
+    let signal = isInitiallyLow ? [-1] : [1];
     let polarity = 1;
     for (let bit of data) {
         if (bit === '0') {
@@ -48,8 +48,8 @@ function encodePseudoternary(data) {
     return signal;
 }
 
-function encodeManchester(data) {
-    let signal = [1];
+function encodeManchester(data, isInitiallyLow) {
+    let signal = isInitiallyLow ? [0] : [1];
     for (let bit of data) {
         signal.push(bit === '0' ? 1 : 0);
         signal.push(bit === '0' ? 0 : 1);
@@ -58,22 +58,39 @@ function encodeManchester(data) {
     return signal;
 }
 
-function encodeDiffManchester(data) {
-    let signal = [1];
-    let current = 1;
-    for (let bit of data) {
-        if (bit === '0') {
-            signal.push(current);
-            signal.push(1 - current);
-        } else {
-            signal.push(1 - current);
-            signal.push(current);
-            current = 1 - current;
+function encodeDiffManchester(data, isInitiallyLow) {
+    let signal = [isInitiallyLow ? 0 : 1]; 
+    let current = signal[0];  
+
+    for (let i = 0; i < data.length; i++) {
+        let bit = data[i];
+
+        if (i === 0) {  
+            if (bit === '0') {
+                signal.push(1 - current);
+                signal.push(current);
+                current = 1 - current; 
+            } else {
+                signal.push(current);
+                signal.push(1 - current); 
+            }
+        } else {  
+            if (bit === '0') {
+                signal.push(current);
+                signal.push(1 - current);
+            } else {
+                signal.push(1 - current);
+                signal.push(current);
+                current = 1 - current;  
+            }
         }
     }
+
     signal.push(current === 0 ? 1 : 0);
+
     return signal;
 }
+
 
 
 function isValidBinary(data) {
@@ -82,6 +99,10 @@ function isValidBinary(data) {
 }
 
 document.querySelectorAll('input[name="encoding"]').forEach((radio) => {
+    radio.addEventListener('change', plotEncoding);
+});
+
+document.querySelectorAll('input[name="initialState"]').forEach((radio) => {
     radio.addEventListener('change', plotEncoding);
 });
 
@@ -101,36 +122,38 @@ function plotEncoding() {
         document.getElementById('error-message').style.display = 'none';
     }
     const encoding = document.querySelector('input[name="encoding"]:checked').value;
+    const initialStart = document.querySelector('input[name="initialState"]:checked').value;
 
     let signal, yScale, valScale;
+    let isInitiallyLow = initialStart === 'low' ? true : false;
     let isManchester = false;
     let hasNigga = false;
     let yTicks = [];
 
     switch (encoding) {
         case 'NRZ-L': 
-            signal = encodeNRZL(data); 
+            signal = encodeNRZL(data, isInitiallyLow); 
             hasNigga = false;
             break;
         case 'NRZ-I': 
-            signal = encodeNRZI(data); 
+            signal = encodeNRZI(data, isInitiallyLow); 
             hasNigga = false;
             break;
         case 'Bipolar AMI': 
-            signal = encodeBipolarAMI(data); 
+            signal = encodeBipolarAMI(data, isInitiallyLow); 
             hasNigga = true;
             break;
         case 'Pseudoternary': 
-            signal = encodePseudoternary(data); 
+            signal = encodePseudoternary(data, isInitiallyLow); 
             hasNigga = true;
             break;
         case 'Manchester': 
-            signal = encodeManchester(data);
+            signal = encodeManchester(data, isInitiallyLow);
             hasNigga = false;
             isManchester = true; 
             break;
         case 'Differential Manchester': 
-            signal = encodeDiffManchester(data); 
+            signal = encodeDiffManchester(data, isInitiallyLow); 
             hasNigga = false;
             isManchester = true;
             break;

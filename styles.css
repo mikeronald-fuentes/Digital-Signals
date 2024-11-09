@@ -29,6 +29,9 @@ body h1{
     margin-bottom: 10px;
 }
 
+.initial{
+    margin-bottom: 10px;
+}
 .chart {
     width: 80%;
     height: 500px;
